@@ -1,2 +1,1 @@
-# miptlabs
-lalalalalalla
+УХАДИ!
