@@ -15,4 +15,4 @@ fail_fast: true
 before_install:
 - pip install flake8
 script:
-- flake8 .
+flake8 —max-line-length=120 .
