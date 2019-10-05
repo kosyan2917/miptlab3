@@ -160,4 +160,4 @@ graph.circle(794 * 900 / 1123 * 0.6 + 80, 900 * 0.895, 5)
 graph.brushColor('blue')
 graph.circle(794 * 900 / 1123 * 0.6 + 82, 900 * 0.895, 2)
 
-run()
+graph.run()
