@@ -1,0 +1,33 @@
+import tkinter as t
+import random
+import time
+
+
+class Object:
+    def __init__(self):
+        pass
+    def create(self):
+        canv.create_oval(self.x, self.x,self.y,self.y, fill = self.color)
+class Figure(Object):
+    colors = ['black', 'purple', 'yellow','blue', 'red']
+    def __init__(self):
+        pass
+class Ball(Figure):
+    def __init__(self):
+        self.x = random.randrange(0,800)
+        self.y = random.randrange(0,600)
+        self.color = random.choice(self.colors)
+        
+    
+    
+root = t.Tk()
+root.geometry('800x600')
+canv = t.Canvas(root, bg='white')
+canv.pack(fill=t.BOTH, expand=1)
+
+for i in range(0,10):
+    ball = Ball()
+    ball.create()
+    time.sleep(1)
+
+root.mainloop()
