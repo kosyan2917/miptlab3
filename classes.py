@@ -24,6 +24,7 @@ class Cat:
         self.name = name
 
     def __add__(self, name):
+        pass
 
 
 a = [Cat(), Cat(), Cat(), Cat()]
@@ -37,3 +38,4 @@ for i in range(0, 5):
     b = random.randint(0, 2)
     c = a[random.randint(0, 3)]
     if b == 0:
+        pass
