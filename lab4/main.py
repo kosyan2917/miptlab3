@@ -283,18 +283,6 @@ class Game:
             if self.objects[key].destroyed:
                 dead.append(key)
 
-        for key1 in self.objects:
-            obj1 = self.objects[key1]
-            for key2 in self.objects:
-                obj2 = self.objects[key2]
-                if obj1 == obj2:
-                    continue
-                if isinstance(obj1, Ball) and isinstance(obj2, Ball):
-                    s = obj1.position - obj2.position
-                    if abs(s) < obj1.radius + obj2.radius:
-                        self.objects[key1].velocity *= -1
-                        self.objects[key2].velocity *= -1
-                        # print(True)
         for key in dead:
             del self.objects[key]
 
