@@ -70,6 +70,23 @@ class Vector2d:
         self.y *= other
         return self
 
+    def __isub__(self, other):
+        if isinstance(other, Vector2d):
+            self.x -= other.x
+            self.y -= other.y
+            return self
+        else:
+            raise TypeError("Only vector can be added to vector")
+
+    def __sub__(self, other):
+        if isinstance(other, Vector2d):
+            s = Vector2d(self.x, self.y)
+            s.x -= other.x
+            s.y -= other.y
+            return s
+        else:
+            raise TypeError("Only vector can be added to vector")
+
     def __abs__(self):
         return abs(complex(self.x, self.y))
 
@@ -148,6 +165,7 @@ class Ball(IRenderable, IIntersectable, IClickable):
         if self.position.y - self.radius < 0:
             self.velocity.y *= -1
 
+
     def clicked(self):
         print("Clicked ball {0}".format(str(self.uuid)))
         self.position.x = rnd.randrange(100, 700)
@@ -224,6 +242,18 @@ class Game:
             if self.objects[key].destroyed:
                 dead.append(key)
 
+        for key1 in self.objects:
+                obj1 = self.objects[key1]
+                for key2 in self.objects:
+                    obj2 = self.objects[key2]
+                    if obj1 == obj2:
+                        continue
+                    if isinstance(obj1,Ball) and isinstance(obj2,Ball):
+                        s = obj1.position - obj2.position
+                        if abs(s) < obj1.radius + obj2.radius:
+                            obj1.velocity *= -1
+                            obj2.velocity *= -1
+                            print(True)
         for key in dead:
             del self.objects[key]
 
