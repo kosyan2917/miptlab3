@@ -3,6 +3,7 @@ import abc
 import uuid
 import random as rnd
 import time
+import math
 #Если гравитации и столкновений нет, значит что я не успел
 
 def random_color():
@@ -101,7 +102,8 @@ class Ball(IRenderable, IIntersectable, IClickable):
         self.radius = radius
         self.color = random_color()
         self._destroyed = False
-
+        self.acc = Vector2d(0,-10)
+        self.angle = 0
         self.velocity = Vector2d(rnd.randrange(-50, 50), rnd.randrange(-50, 50))
         super().__init__(game)
 
@@ -131,7 +133,9 @@ class Ball(IRenderable, IIntersectable, IClickable):
 
     def tick(self):
         self.position += self.velocity * 0.02
-
+        self.velocity += self.acc*0.02
+        self.angle += math.pi/1024
+        self.acc += Vector2d(1*math.cos(self.angle), 1*math.sin(self.angle))
         if self.position.x + self.radius > self.game.maxw:
             self.velocity.x *= -1
 
