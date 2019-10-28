@@ -149,8 +149,18 @@ class Ball(IRenderable, IIntersectable, IClickable):
         return self._destroyed
 
     def tick(self):
+        for key2 in game.objects:
+            obj2 = game.objects[key2]
+            if self.uuid == obj2:
+                continue
+            if isinstance(obj2, Ball):
+                s = self.position - obj2.position
+                if abs(s) < self.radius + obj2.radius:
+                    self.velocity *= -1
+                    game.objects[key2].velocity *= -1
+                    print(True)
         self.position += self.velocity * 0.02
-        self.velocity += self.acc*0.02
+        self.velocity += self.acc*0.001
         self.angle += math.pi/1024
         self.acc += Vector2d(1*math.cos(self.angle), 1*math.sin(self.angle))
         if self.position.x + self.radius > self.game.maxw:
@@ -251,9 +261,9 @@ class Game:
                     if isinstance(obj1,Ball) and isinstance(obj2,Ball):
                         s = obj1.position - obj2.position
                         if abs(s) < obj1.radius + obj2.radius:
-                            obj1.velocity *= -1
-                            obj2.velocity *= -1
-                            print(True)
+                            self.objects[key1].velocity *= -1
+                            self.objects[key2].velocity *= -1
+                            #print(True)
         for key in dead:
             del self.objects[key]
 
