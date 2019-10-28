@@ -4,10 +4,11 @@ import uuid
 import random as rnd
 import time
 import math
-#Если гравитации и столкновений нет, значит что я не успел
+# Если гравитации и столкновений нет, значит что я не успел
+
 
 def random_color():
-    return "#{:06x}".format(rnd.randrange(0, 1<<24))
+    return "#{:06x}".format(rnd.randrange(0, 1 << 24))
 
 
 class IObject:
@@ -108,9 +109,12 @@ class FrameStats(IRenderable):
 
     def render_debug(self):
         duration = self.game.tick_stamp - self.game.last_tick_stamp
-        text = "Tick duration: {0} ms\nFPS: {1}".format(int(1000*duration), int(1.0/duration))
+        text = "Tick duration: {0} ms\nFPS: {1}".format(
+            int(1000 * duration), int(1.0 / duration))
 
-        self.game.next_frame_canvas.create_text(650, 50, text=text, font=("Arial", 20), justify=tk.RIGHT)
+        self.game.next_frame_canvas.create_text(
+            650, 50, text=text, font=(
+                "Arial", 20), justify=tk.RIGHT)
 
 
 class Ball(IRenderable, IIntersectable, IClickable):
@@ -119,30 +123,54 @@ class Ball(IRenderable, IIntersectable, IClickable):
         self.radius = radius
         self.color = random_color()
         self._destroyed = False
-        self.acc = Vector2d(0,-10)
+        self.acc = Vector2d(0, -10)
         self.angle = 0
-        self.velocity = Vector2d(rnd.randrange(-50, 50), rnd.randrange(-50, 50))
+        self.velocity = Vector2d(
+            rnd.randrange(-50, 50), rnd.randrange(-50, 50))
         super().__init__(game)
 
     def render(self):
-        self.game.next_frame_canvas.create_oval(self.position.x - self.radius, self.position.y - self.radius,
-                                                self.position.x + self.radius, self.position.y + self.radius,
-                                                fill=self.color, width=0)
+        self.game.next_frame_canvas.create_oval(
+            self.position.x - self.radius,
+            self.position.y - self.radius,
+            self.position.x + self.radius,
+            self.position.y + self.radius,
+            fill=self.color,
+            width=0)
 
     def render_debug(self):
-        self.game.next_frame_canvas.create_oval(self.position.x - 2, self.position.y - 2,
-                                                self.position.x + 2, self.position.y + 2,
-                                                fill='black', width=0)
-        self.game.next_frame_canvas.create_text(self.position.x, self.position.y + 15,
-                                                text=str(self.uuid).split('-')[0], fill='black')
+        self.game.next_frame_canvas.create_oval(
+            self.position.x - 2,
+            self.position.y - 2,
+            self.position.x + 2,
+            self.position.y + 2,
+            fill='black',
+            width=0)
+        self.game.next_frame_canvas.create_text(
+            self.position.x,
+            self.position.y + 15,
+            text=str(
+                self.uuid).split('-')[0],
+            fill='black')
 
-        vel_base = self.position + self.velocity * self.radius * (1 / abs(self.velocity))
-        self.game.next_frame_canvas.create_line(vel_base.x, vel_base.y,
-                                                vel_base.x + self.velocity.x, vel_base.y + self.velocity.y,
-                                                width='3')
+        vel_base = self.position + self.velocity * \
+            self.radius * (1 / abs(self.velocity))
+        self.game.next_frame_canvas.create_line(
+            vel_base.x,
+            vel_base.y,
+            vel_base.x +
+            self.velocity.x,
+            vel_base.y +
+            self.velocity.y,
+            width='3')
 
     def contains(self, point: Vector2d):
-        return self.radius > abs(complex(self.position.x - point.x, self.position.y - point.y))
+        return self.radius > abs(
+            complex(
+                self.position.x -
+                point.x,
+                self.position.y -
+                point.y))
 
     @property
     def destroyed(self):
@@ -162,9 +190,10 @@ class Ball(IRenderable, IIntersectable, IClickable):
                     game.objects[key2].position += game.objects[key2].velocity * 0.02
                     print(True)
         self.position += self.velocity * 0.02
-        self.velocity += self.acc*0.001
-        self.angle += math.pi/1024
-        self.acc += Vector2d(1*math.cos(self.angle), 1*math.sin(self.angle))
+        self.velocity += self.acc * 0.001
+        self.angle += math.pi / 1024
+        self.acc += Vector2d(1 * math.cos(self.angle),
+                             1 * math.sin(self.angle))
         if self.position.x + self.radius > self.game.maxw:
             self.velocity.x *= -1
 
@@ -177,12 +206,12 @@ class Ball(IRenderable, IIntersectable, IClickable):
         if self.position.y - self.radius < 0:
             self.velocity.y *= -1
 
-
     def clicked(self):
         print("Clicked ball {0}".format(str(self.uuid)))
         self.position.x = rnd.randrange(100, 700)
         self.position.y = rnd.randrange(100, 600)
-        self.velocity = Vector2d(rnd.randrange(-50, 50), rnd.randrange(-50, 50))
+        self.velocity = Vector2d(
+            rnd.randrange(-50, 50), rnd.randrange(-50, 50))
 
 
 class BallFactory:
@@ -255,17 +284,17 @@ class Game:
                 dead.append(key)
 
         for key1 in self.objects:
-                obj1 = self.objects[key1]
-                for key2 in self.objects:
-                    obj2 = self.objects[key2]
-                    if obj1 == obj2:
-                        continue
-                    if isinstance(obj1,Ball) and isinstance(obj2,Ball):
-                        s = obj1.position - obj2.position
-                        if abs(s) < obj1.radius + obj2.radius:
-                            self.objects[key1].velocity *= -1
-                            self.objects[key2].velocity *= -1
-                            #print(True)
+            obj1 = self.objects[key1]
+            for key2 in self.objects:
+                obj2 = self.objects[key2]
+                if obj1 == obj2:
+                    continue
+                if isinstance(obj1, Ball) and isinstance(obj2, Ball):
+                    s = obj1.position - obj2.position
+                    if abs(s) < obj1.radius + obj2.radius:
+                        self.objects[key1].velocity *= -1
+                        self.objects[key2].velocity *= -1
+                        # print(True)
         for key in dead:
             del self.objects[key]
 
@@ -283,7 +312,9 @@ class Game:
         point = Vector2d(event.x, event.y)
         for key in self.objects:
             obj = self.objects[key]
-            if isinstance(obj, IIntersectable) and isinstance(obj, IClickable) and obj.contains(point):
+            if isinstance(
+                    obj, IIntersectable) and isinstance(
+                    obj, IClickable) and obj.contains(point):
                 obj.clicked()
 
     def toggle_pause(self, *args):
