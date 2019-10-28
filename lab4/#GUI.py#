@@ -23,12 +23,13 @@ class Ball(Figure):
         self.color = random.choice(self.colors)
         
 class Game:
+    def __init__():
+        root = t.Tk()
+        root.geometry('800x600')
+        canv = t.Canvas(root, bg='white')
+        canv.pack(fill=t.BOTH, expand=1)
+
     
-    
-root = t.Tk()
-root.geometry('800x600')
-canv = t.Canvas(root, bg='white')
-canv.pack(fill=t.BOTH, expand=1)
 
 Ball().create('ball')  
 
