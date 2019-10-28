@@ -158,6 +158,8 @@ class Ball(IRenderable, IIntersectable, IClickable):
                 if abs(s) < self.radius + obj2.radius:
                     self.velocity *= -1
                     game.objects[key2].velocity *= -1
+                    self.position += self.velocity * 0.02
+                    game.objects[key2].position += game.objects[key2].velocity * 0.02
                     print(True)
         self.position += self.velocity * 0.02
         self.velocity += self.acc*0.001
