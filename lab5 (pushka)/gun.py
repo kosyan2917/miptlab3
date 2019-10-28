@@ -29,21 +29,21 @@ class ball():
         self.ay = -2
         self.color = choice(['blue', 'green', 'red', 'brown'])
         self.id = canv.create_oval(
-                self.x - self.r,
-                self.y - self.r,
-                self.x + self.r,
-                self.y + self.r,
-                fill=self.color
+            self.x - self.r,
+            self.y - self.r,
+            self.x + self.r,
+            self.y + self.r,
+            fill=self.color
         )
         self.live = 30
 
     def set_coords(self):
         canv.coords(
-                self.id,
-                self.x - self.r,
-                self.y - self.r,
-                self.x + self.r,
-                self.y + self.r
+            self.id,
+            self.x - self.r,
+            self.y - self.r,
+            self.x + self.r,
+            self.y + self.r
         )
 
     def move(self):
@@ -54,20 +54,24 @@ class ball():
         и стен по краям окна (размер окна 800х600).
         """
         # FIXME
-        self.ax = -self.vx*0.01
+        self.ax = -self.vx * 0.01
         self.vx += self.ax
         self.vy += self.ay
         self.x += self.vx
         self.y -= self.vy
-        if self.y >= 605-self.r:
+        if self.y >= 605 - self.r:
             if (abs(self.vy)) <= 1:
                 self.vy = 0
                 self.ay = 0
                 self.vx = 0
             else:
                 self.vy *= -1
-        canv.coords(self.id, self.x-self.r,self.y-self.r,self.x+self.r,self.y+self.r)
-        
+        canv.coords(
+            self.id,
+            self.x - self.r,
+            self.y - self.r,
+            self.x + self.r,
+            self.y + self.r)
 
     def hittest(self, obj):
         pass
@@ -79,7 +83,7 @@ class ball():
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
         # FIXME
-           # return False
+        # return False
 
 
 class Gun:
@@ -87,7 +91,8 @@ class Gun:
         self.f2_power = 10
         self.f2_on = 0
         self.an = 1
-        self.id = canv.create_line(20,450,50,420,width=7) # FIXME: don't know how to set it...
+        # FIXME: don't know how to set it...
+        self.id = canv.create_line(20, 450, 50, 420, width=7)
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -102,7 +107,7 @@ class Gun:
         bullet += 1
         new_ball = ball()
         new_ball.r += 5
-        self.an = math.atan((event.y-new_ball.y) / (event.x-new_ball.x))
+        self.an = math.atan((event.y - new_ball.y) / (event.x - new_ball.x))
         new_ball.vx = self.f2_power * math.cos(self.an)
         new_ball.vy = - self.f2_power * math.sin(self.an)
         balls += [new_ball]
@@ -112,7 +117,7 @@ class Gun:
     def targetting(self, event=0):
         """Прицеливание. Зависит от положения мыши."""
         if event:
-            self.an = math.atan((event.y-450) / (event.x-20))
+            self.an = math.atan((event.y - 450) / (event.x - 20))
         if self.f2_on:
             canv.itemconfig(self.id, fill='orange')
         else:
@@ -136,8 +141,8 @@ class target():
         self.points = 0
         self.live = 1
     # FIXME: don't work!!! How to call this functions when object is created?
-        self.id = canv.create_oval(0,0,0,0)
-        self.id_points = canv.create_text(30,30,text = self.points,font = '28')
+        self.id = canv.create_oval(0, 0, 0, 0)
+        self.id_points = canv.create_text(30, 30, text=self.points, font='28')
         self.new_target()
 
     def new_target(self):
@@ -146,7 +151,7 @@ class target():
         y = self.y = rnd(300, 550)
         r = self.r = rnd(2, 50)
         color = self.color = 'red'
-        canv.coords(self.id, x-r, y-r, x+r, y+r)
+        canv.coords(self.id, x - r, y - r, x + r, y + r)
         canv.itemconfig(self.id, fill=color)
 
     def hit(self, points=1):
@@ -182,7 +187,11 @@ def new_game(event=''):
                 t1.hit()
                 canv.bind('<Button-1>', '')
                 canv.bind('<ButtonRelease-1>', '')
-                canv.itemconfig(screen1, text='Вы уничтожили цель за ' + str(bullet) + ' выстрелов')
+                canv.itemconfig(
+                    screen1,
+                    text='Вы уничтожили цель за ' +
+                    str(bullet) +
+                    ' выстрелов')
         canv.update()
         time.sleep(0.03)
         g1.targetting()
