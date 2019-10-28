@@ -3,7 +3,7 @@ import abc
 import uuid
 import random as rnd
 import time
-
+#Если гравитации и столкновений нет, значит что я не успел
 
 def random_color():
     return "#{:06x}".format(rnd.randrange(0, 1<<24))
