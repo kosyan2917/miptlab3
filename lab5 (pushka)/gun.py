@@ -20,6 +20,7 @@ class ball():
         x - начальное положение мяча по горизонтали
         y - начальное положение мяча по вертикали
         """
+        self.live = 0
         self.x = x
         self.y = y
         self.r = 10
@@ -35,7 +36,7 @@ class ball():
             self.y + self.r,
             fill=self.color
         )
-        self.live = 30
+
 
     def set_coords(self):
         canv.coords(
@@ -54,18 +55,27 @@ class ball():
         и стен по краям окна (размер окна 800х600).
         """
         # FIXME
-        self.ax = -self.vx * 0.01
-        self.vx += self.ax
+        
         self.vy += self.ay
         self.x += self.vx
         self.y -= self.vy
-        if self.y >= 605 - self.r:
-            if (abs(self.vy)) <= 1:
-                self.vy = 0
+        if self.y > 600  - self.r:
+            if self.vx <= 1:
+                self.y = 580
                 self.ay = 0
+                self.vy = 0
                 self.vx = 0
+                self.live = 0
+                while self.live < 1000:
+                    self.live += 1
+                else:
+                    canv.delete(self.id)
+                print(self.live)
             else:
+                self.vx -= self.ax
                 self.vy *= -1
+            print(self.vx)
+
         canv.coords(
             self.id,
             self.x - self.r,
@@ -74,7 +84,11 @@ class ball():
             self.y + self.r)
 
     def hittest(self, obj):
-        pass
+        if math.sqrt((self.x - obj.x)**2 + (self.y - obj.y)**2) < self.r + obj.r:
+            return True
+        else:
+            return False
+        
         """Функция проверяет сталкивалкивается ли данный обьект с целью, описываемой в обьекте obj.
 
         Args:
@@ -83,7 +97,6 @@ class ball():
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
         # FIXME
-        # return False
 
 
 class Gun:
@@ -91,6 +104,9 @@ class Gun:
         self.f2_power = 10
         self.f2_on = 0
         self.an = 1
+        self.y1 = 450
+        self.y2 = 420
+        self.v = 1
         # FIXME: don't know how to set it...
         self.id = canv.create_line(20, 450, 50, 420, width=7)
 
@@ -105,26 +121,35 @@ class Gun:
         """
         global balls, bullet
         bullet += 1
-        new_ball = ball()
+        new_ball = ball(50,self.y1)
         new_ball.r += 5
         self.an = math.atan((event.y - new_ball.y) / (event.x - new_ball.x))
         new_ball.vx = self.f2_power * math.cos(self.an)
         new_ball.vy = - self.f2_power * math.sin(self.an)
+        new_ball.ax = new_ball.vx * 0.25
         balls += [new_ball]
         self.f2_on = 0
         self.f2_power = 10
 
+    def move(self):
+        if self.y2 < 0:
+            self.v *= -1
+        if self.y1 > 600:
+            self.v *= -1
+        self.y1 += self.v
+        self.y2 += self.v  
+        
     def targetting(self, event=0):
         """Прицеливание. Зависит от положения мыши."""
         if event:
-            self.an = math.atan((event.y - 450) / (event.x - 20))
+            self.an = math.atan((event.y - self.y1) / (event.x - 20))
         if self.f2_on:
             canv.itemconfig(self.id, fill='orange')
         else:
             canv.itemconfig(self.id, fill='black')
-        canv.coords(self.id, 20, 450,
+        canv.coords(self.id, 20, self.y1,
                     20 + max(self.f2_power, 20) * math.cos(self.an),
-                    450 + max(self.f2_power, 20) * math.sin(self.an)
+                    self.y1 + max(self.f2_power, 20) * math.sin(self.an)
                     )
 
     def power_up(self):
@@ -176,10 +201,14 @@ def new_game(event=''):
     canv.bind('<Button-1>', g1.fire2_start)
     canv.bind('<ButtonRelease-1>', g1.fire2_end)
     canv.bind('<Motion>', g1.targetting)
+    canv.bind('<Button-2>', g1.split)
     t1.live = 1
     while t1.live or balls:
+        g1.move()
         for b in balls:
             b.move()
+            if b.live >= 1000:
+                balls.remove(b)
             if b.hittest(t1) and t1.live:
                 t1.live = 0
                 t1.hit()
@@ -195,7 +224,7 @@ def new_game(event=''):
         g1.targetting()
         g1.power_up()
     canv.itemconfig(screen1, text='')
-    canv.delete(gun)
+    canv.delete(g1)
     root.after(750, new_game)
 
 
