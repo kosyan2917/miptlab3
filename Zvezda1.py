@@ -8,23 +8,29 @@ class Players:
         self.game = game
         self.x = 0
         self.vx = 0
-        self.f2_power = 10
-        self.f2_on = 0
-        self.an = 1
+        self.power = 50
+        self.on = 0
+        self.an = math.pi/2
+        self.van = 0
 
-    def targetting(self, event=0):
-        print(event.x, event.y)
-        if event:
-            try:
-                self.an = math.atan((event.y - 250) / (event.x - self.x))
-            except ZeroDivisionError:
-                self.an = math.pi/2
-        if self.f2_on:
-            self.game.canv.itemconfig(self.obj[3], fill='orange')
-        else:
-            self.game.canv.itemconfig(self.obj[3], fill='black')
-        self.game.canv.coords(self.obj[3], self.x, 690, self.x + 50 * math.cos(self.an), 690 + 50*math.sin(self.an))
+    def targetting(self, event):
+        if event.keycode == 38:
+            self.van = math.pi/256
+        if event.keycode == 40:
+            self.van = -math.pi/256
         print(self.game.canv.coords(self.obj[3]))
+
+    def fire_start(self, event):
+        self.on = 1
+
+    def fire_end(self, event):
+        self.on = 0
+        self.bullet = Bullet(self.game)
+        print(self.bullet)
+        self.game.objects.append(self.bullet)
+        self.bullet.shot(self.gun[2], self.gun[3], self.power, self.an)
+        self.game.root.unbind('<space>')
+        self.game.root.unbind('<KeyRelease-space>')
 
     def move_forward(self, event):
         self.vx = 2
@@ -44,7 +50,18 @@ class Players:
         self.obj = [self.game.canv.create_oval(2500, 2000, 2520, 1980, fill='black'), self.game.canv.create_oval(2530, 2000, 2550, 1980, fill='black'), self.game.canv.create_rectangle(2500, 1985, 2550, 1970, fill='red'), self.game.canv.create_line(2525,1970,2525,1920,width=7)]
 
     def render(self):
+        self.gun = self.game.canv.coords(self.obj[3])
+        if self.on:
+            self.game.canv.itemconfig(self.obj[3], fill='orange')
+            if self.power < 200:
+                self.power += 0.5
+        else:
+            self.game.canv.itemconfig(self.obj[3], fill='black')
+            self.power = 50
         self.x += self.vx
+        self.an += self.van
+        self.game.canv.coords(self.obj[3], self.gun[0], self.gun[1], self.gun[0] + self.power * math.cos(self.an),
+                              self.gun[1] + self.power * math.sin(self.an) * (-1))
         if (self.x > 975) and (self.x <1000):
             self.vx = 0
             self.x = 975
@@ -62,16 +79,72 @@ class Players:
             cors[0] += self.vx
             cors[2] += self.vx
             self.game.canv.coords(self.obj[i], cors)
+        self.van = 0
+
+class Bullet:
+    def __init__(self, game):
+        self.x = 0
+        self.y = 0
+        self.r = 10
+        self.vx = 0
+        self.vy = 0
+        self.an = 0
+        self.game = game
+        self.acc = 0.05
+        self.module = 0.1
+        self.x0 = 0
+        self.y0 = 0
+
+    def shot(self, x, y, power, an):
+        self.obj = self.game.canv.create_oval(x-self.r, y-self.r, x+self.r, y+self.r, fill='blue')
+        self.x = x
+        self.y = y
+        self.an = an
+        self.vx = power * math.cos(self.an) * self.module
+        self.vy = power * (-1) * math.sin(self.an) * self.module
+
+    def render(self):
+        #print(self.game.camera.vx, self.game.camera.vy)
+        self.vy += self.acc
+        if (self.game.camera.vx == 0) and (self.game.camera.vy == 0):
+            self.x += self.vx
+            self.y += self.vy
+        elif self.game.camera.vx == 0:
+            self.x += self.vx
+        elif self.game.camera.vy == 0:
+            self.y += self.vy
+            #print(True)
+        self.game.canv.coords(self.obj, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
+        if (self.x > 150) and (self.x < 1180):
+            self.game.camera.vx = self.vx
+        else:
+            self.game.camera.vx = 0
+        if (self.y > 150) and (self.y < 570):
+            self.game.camera.vy = self.vy
+        if self.y < 10:
+            self.y = 10
+            self.vy *= -1
+        if self.y > 710:
+            self.y = 710
+            self.vy *= -1
+        if self.x < 10:
+            self.x = 10
+            self.vx *= -1
+        if self.x > 1270:
+            self.x = 1270
+            self.vx *= -1
 
 
 class Camera:
-    def __init__(self):
+    def __init__(self, game):
         self.x1 = 0
         self.y1 = 0
         self.x2 = 1280
         self.y2 = 720
         self.vx = 0
         self.vy = 0
+        self.game = game
+
     def set_x_speedmore(self, event):
         self.vx = 4
     
@@ -85,29 +158,33 @@ class Camera:
         self.vy = v
 
     def set_pos(self, x, y):
-        for gameobj in self.objects:
-            coords = self.canv.coords(gameobj.obj)
+        diffx = self.x2 - x
+        diffy = self.y2 - y
+        for gameobj in self.game.objects:
+            coords = self.game.canv.coords(gameobj.obj)
             if isinstance(gameobj, Players):
-                print(gameobj)
-                print(gameobj.obj)
                 for j in range(0, len(gameobj.obj)):
-                    coords = self.canv.coords(gameobj.obj[j])
+                    coords = self.game.canv.coords(gameobj.obj[j])
                     new_coords = []
                     for i in range(0, len(coords)):
                         if i % 2 == 0:
-                            new_coords.append(coords[i] - self.camera.vx)
+                            new_coords.append(coords[i] - diffx)
                         else:
-                            new_coords.append(coords[i] - self.camera.vy)
-                    self.canv.coords(gameobj.obj[j], new_coords)
+                            new_coords.append(coords[i] - diffy)
+                    self.game.canv.coords(gameobj.obj[j], new_coords)
             else:
                 new_coords = []
-                coords = self.canv.coords(gameobj.obj)
+                coords = self.game.canv.coords(gameobj.obj)
                 for i in range(0,len(coords)):
                     if i%2==0:
-                        new_coords.append(coords[i] - self.camera.vx)
+                        new_coords.append(coords[i] - diffx)
                     else:
-                        new_coords.append(coords[i] - self.camera.vy)
-                self.canv.coords(gameobj.obj, new_coords)
+                        new_coords.append(coords[i] - diffy)
+                self.game.canv.coords(gameobj.obj, new_coords)
+        self.x2 = x
+        self.y2 = y
+        self.x1 = self.x2 - 1280
+        self.y1 = self.y2 - 720
 
 
 class Mount:
@@ -124,9 +201,9 @@ class Mount:
 
 
 class Game:
-    def __init__(self, camera):
+    def __init__(self):
         self.turn = 1
-        self.camera = camera
+        self.camera = Camera(self)
         self.objects = []
         self.root = tk.Tk()
         self.fr = tk.Frame(self.root)
@@ -141,21 +218,17 @@ class Game:
         self.camera.y1 += self.camera.vy
         self.camera.y2 += self.camera.vy
         if self.camera.x1 < 0:
-            self.camera.x1 = 0
-            self.camera.x2 = 1280
-            self.camera.vx = 0
+            self.camera.set_pos(1280, self.camera.y2)
+            self.vx = 0
         if self.camera.x2 > 3000:
-            self.camera.vx = 0
-            self.camera.x2 = 3000
-            self.camera.x1 = 1720
+            self.camera.set_pos(3000, self.camera.y2)
+            self.vx = 0
         if self.camera.y1 < 0:
-            self.camera.vy = 0
-            self.camera.y2 = 720
-            self.camera.y1 = 0
+            self.camera.set_pos(self.camera.x2, 720)
+            self.vy = 0
         if self.camera.y2 > 2000:
-            self.camera.vy = 0
-            self.camera.y1 = 1280
-            self.camera.y2 = 2000
+            self.camera.set_pos(self.camera.x2, 2000)
+            self.vy = 0
 
         for gameobj in self.objects:
             coords = self.canv.coords(gameobj.obj)
@@ -169,6 +242,7 @@ class Game:
                         else:
                             new_coords.append(coords[i] - self.camera.vy)
                     self.canv.coords(gameobj.obj[j], new_coords)
+                gameobj.render()
             else:
                 new_coords = []
                 coords = self.canv.coords(gameobj.obj)
@@ -178,8 +252,8 @@ class Game:
                     else:
                         new_coords.append(coords[i] - self.camera.vy)
                 self.canv.coords(gameobj.obj, new_coords)
-        self.player1.render()
-        self.player2.render()
+                if isinstance(gameobj, Bullet):
+                    gameobj.render()
         self.root.after(10, self.tick)
 
     def next_turn(self, event):
@@ -190,7 +264,9 @@ class Game:
             self.root.bind('<Left>', self.player2.move_backward)
             self.root.bind('<KeyRelease-Right>', self.player2.stop)
             self.root.bind('<KeyRelease-Left>', self.player2.stop)
-            self.root.bind('<Motion>', self.player2.targetting)
+            self.root.bind('<KeyPress>', self.player2.targetting)
+            self.root.bind('<space>', self.player2.fire_start)
+            self.root.bind('<KeyRelease-space>', self.player2.fire_end)
             self.camera.vx = 1720
         else:
             self.player2.vx = 0
@@ -198,7 +274,9 @@ class Game:
             self.root.bind('<Left>', self.player1.move_backward)
             self.root.bind('<KeyRelease-Right>', self.player1.stop)
             self.root.bind('<KeyRelease-Left>', self.player1.stop)
-            self.root.bind('<Motion>', self.player1.targetting)
+            self.root.bind('<KeyPress>', self.player1.targetting)
+            self.root.bind('<KeyRelease-space>', self.player1.fire_end)
+            self.root.bind('<space>', self.player1.fire_start)
             self.camera.vx = -1720
 
     def run(self):
@@ -217,11 +295,13 @@ class Game:
         self.root.bind('<KeyRelease-Right>', self.player1.stop)
         self.root.bind('<KeyRelease-Left>', self.player1.stop)
         self.root.bind('<KeyPress>', self.player1.targetting)
+        self.root.bind('<space>', self.player1.fire_start)
+        self.root.bind('<KeyRelease-space>', self.player1.fire_end)
         self.root.bind('c', self.next_turn)
         self.root.after(10, self.tick)
         self.root.mainloop()
 
 
 if __name__ == '__main__':
-    game = Game(Camera())
+    game = Game()
     game.run()
