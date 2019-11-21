@@ -14,20 +14,22 @@ class Players:
         self.van = 0
 
     def targetting(self, event):
-        if event.keycode == 38:
+        print(event.keycode)
+        if event.keycode == 111:
             self.van = math.pi/256
-        if event.keycode == 40:
+        if event.keycode == 116:
             self.van = -math.pi/256
         print(self.game.canv.coords(self.obj[3]))
 
     def fire_start(self, event):
         self.on = 1
+        self.vx = 0.1
 
     def fire_end(self, event):
         self.on = 0
         self.bullet = Bullet(self.game)
-        print(self.bullet)
         self.game.objects.append(self.bullet)
+        #print(self.bullet)
         self.bullet.shot(self.gun[2], self.gun[3], self.power, self.an)
         self.game.root.unbind('<space>')
         self.game.root.unbind('<KeyRelease-space>')
@@ -62,6 +64,8 @@ class Players:
         self.an += self.van
         self.game.canv.coords(self.obj[3], self.gun[0], self.gun[1], self.gun[0] + self.power * math.cos(self.an),
                               self.gun[1] + self.power * math.sin(self.an) * (-1))
+        #print(self.game.canv.coords(self.obj[3]))
+        print(self.van)
         if (self.x > 975) and (self.x <1000):
             self.vx = 0
             self.x = 975
@@ -81,6 +85,7 @@ class Players:
             self.game.canv.coords(self.obj[i], cors)
         self.van = 0
 
+
 class Bullet:
     def __init__(self, game):
         self.x = 0
@@ -94,6 +99,9 @@ class Bullet:
         self.module = 0.1
         self.x0 = 0
         self.y0 = 0
+        self.obj = 0
+        self.timer = 1000
+        self.time = 0
 
     def shot(self, x, y, power, an):
         self.obj = self.game.canv.create_oval(x-self.r, y-self.r, x+self.r, y+self.r, fill='blue')
@@ -105,34 +113,16 @@ class Bullet:
 
     def render(self):
         #print(self.game.camera.vx, self.game.camera.vy)
-        self.vy += self.acc
-        if (self.game.camera.vx == 0) and (self.game.camera.vy == 0):
+        if self.time < self.timer:
             self.x += self.vx
             self.y += self.vy
-        elif self.game.camera.vx == 0:
-            self.x += self.vx
-        elif self.game.camera.vy == 0:
-            self.y += self.vy
-            #print(True)
-        self.game.canv.coords(self.obj, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
-        if (self.x > 150) and (self.x < 1180):
-            self.game.camera.vx = self.vx
+            self.game.canv.coords(self.obj, self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r)
+            self.time += 1
         else:
-            self.game.camera.vx = 0
-        if (self.y > 150) and (self.y < 570):
-            self.game.camera.vy = self.vy
-        if self.y < 10:
-            self.y = 10
-            self.vy *= -1
-        if self.y > 710:
-            self.y = 710
-            self.vy *= -1
-        if self.x < 10:
-            self.x = 10
-            self.vx *= -1
-        if self.x > 1270:
-            self.x = 1270
-            self.vx *= -1
+            pass
+        self.vy += self.acc
+
+            
 
 
 class Camera:
@@ -168,19 +158,22 @@ class Camera:
                     new_coords = []
                     for i in range(0, len(coords)):
                         if i % 2 == 0:
-                            new_coords.append(coords[i] - diffx)
+                            new_coords.append(coords[i] + diffx)
                         else:
-                            new_coords.append(coords[i] - diffy)
+                            new_coords.append(coords[i] + diffy)
                     self.game.canv.coords(gameobj.obj[j], new_coords)
+                gameobj.render()
             else:
                 new_coords = []
                 coords = self.game.canv.coords(gameobj.obj)
                 for i in range(0,len(coords)):
                     if i%2==0:
-                        new_coords.append(coords[i] - diffx)
+                        new_coords.append(coords[i] + diffx)
                     else:
-                        new_coords.append(coords[i] - diffy)
+                        new_coords.append(coords[i] + diffy)
                 self.game.canv.coords(gameobj.obj, new_coords)
+                if isinstance(gameobj, Bullet):
+                    gameobj.render()
         self.x2 = x
         self.y2 = y
         self.x1 = self.x2 - 1280
@@ -213,10 +206,7 @@ class Game:
 
     def tick(self):
         #print([self.camera.x1,self.camera.x2,self.camera.y1,self.camera.y2])
-        self.camera.x1 += self.camera.vx
-        self.camera.x2 += self.camera.vx
-        self.camera.y1 += self.camera.vy
-        self.camera.y2 += self.camera.vy
+        self.camera.set_pos(self.camera.x2 + self.camera.vx, self.camera.y2 + self.camera.vy)
         if self.camera.x1 < 0:
             self.camera.set_pos(1280, self.camera.y2)
             self.vx = 0
@@ -230,7 +220,7 @@ class Game:
             self.camera.set_pos(self.camera.x2, 2000)
             self.vy = 0
 
-        for gameobj in self.objects:
+        '''for gameobj in self.objects:
             coords = self.canv.coords(gameobj.obj)
             if isinstance(gameobj, Players):
                 for j in range(0, len(gameobj.obj)):
@@ -253,11 +243,12 @@ class Game:
                         new_coords.append(coords[i] - self.camera.vy)
                 self.canv.coords(gameobj.obj, new_coords)
                 if isinstance(gameobj, Bullet):
-                    gameobj.render()
+                    gameobj.render()'''
         self.root.after(10, self.tick)
 
     def next_turn(self, event):
         self.turn += 1
+        print('NExt turn')
         if self.turn % 2 == 0:
             self.player1.vx = 0
             self.root.bind('<Right>', self.player2.move_forward)
@@ -267,7 +258,7 @@ class Game:
             self.root.bind('<KeyPress>', self.player2.targetting)
             self.root.bind('<space>', self.player2.fire_start)
             self.root.bind('<KeyRelease-space>', self.player2.fire_end)
-            self.camera.vx = 1720
+            self.camera.set_pos(3000, 2000)
         else:
             self.player2.vx = 0
             self.root.bind('<Right>', self.player1.move_forward)
@@ -277,7 +268,7 @@ class Game:
             self.root.bind('<KeyPress>', self.player1.targetting)
             self.root.bind('<KeyRelease-space>', self.player1.fire_end)
             self.root.bind('<space>', self.player1.fire_start)
-            self.camera.vx = -1720
+            self.camera.set_pos(1280,2000)
 
     def run(self):
         self.camera.vy = 1280
@@ -289,7 +280,7 @@ class Game:
         self.player2.create_player2()
         for i in range(0,20):
             self.objects.append(Mount(self))
-        print(self.objects)
+        #print(self.objects)
         self.root.bind('<Right>', self.player1.move_forward)
         self.root.bind('<Left>', self.player1.move_backward)
         self.root.bind('<KeyRelease-Right>', self.player1.stop)
